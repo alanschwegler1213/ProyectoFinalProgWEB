@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="StorePhone - Tienda de teléfonos y dispositivos móviles con las mejores ofertas y productos tecnológicos">
+    <title>StorePhone - Tienda de Teléfonos y Dispositivos</title>
+    <link rel="stylesheet" href="StorePhone.css">
+</head>
+<body>
+    <header>
+        <h1>StorePhone</h1>
+
+        <button class="menu-hamburguesa" id="btnMenu" aria-label="Abrir menú de navegación" aria-expanded="false">☰</button>
+
+        <nav class="nav" id="siteNav" aria-label="Navegación principal">
+            <ul>
+                <li><a href="#Inicio">Inicio</a></li>
+                <li><a href="#Ofertas">Ofertas</a></li>
+                <li><a href="#Catalogo">Catálogo</a></li>
+                <li><a href="#Contacto">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <section id="Inicio" aria-labelledby="titulo-inicio">
+            <h2 id="titulo-inicio">Bienvenidos a StorePhone</h2>
+            <p>Promociones exclusivas en todos los modelos</p>
+            <img src="img/imgProductosStorePhone.png" alt="Productos destacados de StorePhone" width="800" height="auto" loading="lazy">
+        </section>
+
+        <section id="Ofertas" aria-labelledby="titulo-ofertas">
+            <h2 id="titulo-ofertas">Ofertas de la semana</h2>
+            <p>Por esta semana, descuentos en efectivo y transferencia!!</p>    
+            <img src="img/imgOfertasStorePhone.png" alt="Ofertas especiales de la semana en StorePhone" width="600" height="auto" loading="lazy">
+        </section>
+        
+        <section id="Catalogo" aria-labelledby="titulo-catalogo">
+            <h2 id="titulo-catalogo">Nuestros productos</h2>
+            <div class="productos" role="list">
+                <article class="producto" role="listitem">
+                    <img src="img/phoneX1.png" alt="Phone X1 - Teléfono inteligente con pantalla 6.5 pulgadas" width="500" height="auto" loading="lazy">
+                    <h3>Phone X1</h3>
+                    <p>Pantalla 6.5", batería de larga duración, p63 y realidad virtual integrada</p>
+                </article>
+
+                <article class="producto" role="listitem">
+                    <img src="img/phoneX2.png" alt="Phone X2+ - Teléfono inteligente con pantalla de 7 pulgadas" width="500" height="auto" loading="lazy">
+                    <h3>Phone X2+</h3>
+                    <p>Pantalla de 7", cámara triple, memoria de 1TB, p63, integrado con IAphone</p>
+                </article>
+
+                <article class="producto" role="listitem">
+                    <img src="img/phoneX3PRO.png" alt="Phone X3 Pro - Teléfono inteligente premium con cámara 4K" width="500" height="auto" loading="lazy">
+                    <h3>Phone X3 Pro</h3>
+                    <p>Pantalla de 7,5', cámara triple HD 4K, integrado con IAphone y mucho más!</p>
+                </article>
+
+                <article class="producto" role="listitem">
+                    <img src="img/bookNet.png" alt="BookNet - Laptop con núcleo A18 y 32GB de RAM" width="500" height="auto" loading="lazy">
+                    <h3>BookNet</h3>    
+                    <p>BookNet con núcleo A18, multitouch, IA incluida, RAM de 32GB, 512GB de almacenamiento</p>
+                </article>
+
+                <article class="producto" role="listitem">
+                    <img src="img/auriPods.png" alt="AuriPods - Auriculares inalámbricos con cancelación de ruido" width="500" height="auto" loading="lazy">
+                    <h3>AuriPods</h3>
+                    <p>Últimos AirPods con traducción en tiempo real, cancelación de sonido y sonido adaptativo</p>
+                </article>
+            </div>
+            <p>
+                <a id="btnComprarML" href="https://listado.mercadolibre.com.ar/iphone-16-pro-max?sb=all_mercadolibre#D[A:iphone%2016%20pro%20max]" class="btn-ml" target="_blank" rel="noopener noreferrer" aria-label="Comprar productos en Mercado Libre (se abre en nueva ventana)">Comprar en Mercado Libre</a>
+            </p>
+        </section>
+
+
+        <section id="Contacto" aria-labelledby="titulo-contacto">
+            <div class="caja-contacto">
+                <h2 id="titulo-contacto">Contacto</h2>
+                <p>Si querés recibir más información acerca de las promociones y descuentos, dejános tu contacto:</p>
+
+                <form id="contactoForm" aria-label="Formulario de contacto">
+                    <div class="form-group">
+                        <label for="nombre">Nombre y Apellido:</label>
+                        <input type="text" id="nombre" name="name" required aria-required="true" autocomplete="name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required aria-required="true" autocomplete="email">
+                    </div>
+
+                    <button type="submit">Enviar</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="Admin" style="display: none;" aria-labelledby="titulo-admin" aria-hidden="true">
+            <div class="caja-admin">
+                <h2 id="titulo-admin">Panel de Administración</h2>
+                <p>Gestiona los usuarios registrados</p>
+                
+                <div id="tabla-usuarios" role="region" aria-live="polite" aria-label="Lista de usuarios registrados">
+                    <p>Cargando usuarios...</p>
+                </div>
+                
+                <button id="btnCerrarAdmin" class="btn-cerrar" aria-label="Cerrar panel de administración">Cerrar Panel</button>
+            </div>
+        </section>
+
+    </main>
+
+        <footer role="contentinfo">
+            <p>© 2025 StorePhone</p>
+            <div class="footer-buttons">
+                <button id="btnAdmin" class="btn-admin" aria-label="Acceder al panel de administración">🔐 Administrador</button>
+                <button id="btnLogout" class="btn-logout" style="display: none;" aria-label="Cerrar sesión">Cerrar Sesión</button>
+            </div>
+        </footer>
+
+        <script src="dist/main.js"></script>
+
+        <script>
+            const btnMenu = document.getElementById('btnMenu');
+            const navUl = document.querySelector('#siteNav ul');
+
+            function cerrarMenu() {
+                navUl.classList.remove('mostrar');
+                btnMenu.setAttribute('aria-expanded', 'false');
+            }
+
+            function abrirMenu() {
+                navUl.classList.add('mostrar');
+                btnMenu.setAttribute('aria-expanded', 'true');
+            }
+
+            btnMenu.addEventListener('click', () => {
+                if (navUl.classList.contains('mostrar')) {
+                    cerrarMenu();
+                } else {
+                    abrirMenu();
+                }
+            });
+
+            navUl.addEventListener('click', (e) => {
+                if (e.target.closest('a')) cerrarMenu();
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) cerrarMenu();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!navUl.contains(e.target) && !btnMenu.contains(e.target)) cerrarMenu();
+            });
+        </script>
+    
+        <script>
+            const btnComprarML = document.getElementById('btnComprarML');
+
+            btnComprarML.addEventListener('click', () => {
+                btnComprarML.textContent = '¡Gracias por tu compra!';
+                btnComprarML.style.color = 'green';
+            });
+        </script>
+    
+    
+    </body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Iniciar sesión en StorePhone - Acceso al panel de administración">
+    <title>Iniciar Sesión - StorePhone</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <a href="StorePhone.html" class="btn-volver-atras" aria-label="Volver a la página principal">
+        ←
+    </a>
+    <div class="contenedor-login">
+        <h1>StorePhone</h1>
+        <p>Iniciar Sesión</p>
+        
+        <form id="formularioLogin" class="formulario-login">
+            <div class="grupo-formulario">
+                <label for="usuario">Usuario:</label>
+                <input 
+                    type="text" 
+                    id="usuario" 
+                    name="usuario" 
+                    required 
+                    autocomplete="username"
+                    aria-label="Nombre de usuario"
+                >
+            </div>
+
+            <div class="grupo-formulario">
+                <label for="contraseña">Contraseña:</label>
+                <input 
+                    type="password" 
+                    id="contraseña" 
+                    name="contraseña" 
+                    required 
+                    autocomplete="current-password"
+                    aria-label="Contraseña"
+                >
+            </div>
+
+            <div id="mensajeError" class="mensaje-error" role="alert"></div>
+
+            <button type="submit" class="btn-iniciar-sesion" id="btnIniciarSesion">
+                Iniciar Sesión
+            </button>
+        </form>
+
+        <a href="StorePhone.html" class="enlace-volver">Volver al sitio</a>
+    </div>
+
+    <script>
+        const formularioLogin = document.getElementById('formularioLogin');
+        const mensajeError = document.getElementById('mensajeError');
+        const btnIniciarSesion = document.getElementById('btnIniciarSesion');
+
+        formularioLogin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const usuario = document.getElementById('usuario').value.trim();
+            const contraseña = document.getElementById('contraseña').value;
+
+            if (!usuario || !contraseña) {
+                mostrarError('Por favor, completa todos los campos');
+                return;
+            }
+
+            btnIniciarSesion.disabled = true;
+            btnIniciarSesion.textContent = 'Iniciando sesión...';
+            ocultarError();
+
+            try {
+                const respuesta = await fetch('http://localhost:3000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ username: usuario, password: contraseña })
+                });
+
+                const datos = await respuesta.json();
+
+                if (!respuesta.ok) {
+                    mostrarError(datos.error || 'Error al iniciar sesión');
+                    btnIniciarSesion.disabled = false;
+                    btnIniciarSesion.textContent = 'Iniciar Sesión';
+                    return;
+                }
+
+                if (datos.user.role === 'admin') {
+                    window.location.href = 'StorePhone.html?admin=true';
+                } else {
+                    window.location.href = 'StorePhone.html?user=true';
+                }
+
+            } catch (error) {
+                mostrarError('Error de conexión. Verifica que el servidor esté ejecutándose.');
+                btnIniciarSesion.disabled = false;
+                btnIniciarSesion.textContent = 'Iniciar Sesión';
+            }
+        });
+
+        function mostrarError(mensaje) {
+            mensajeError.textContent = mensaje;
+            mensajeError.classList.add('mostrar');
+        }
+
+        function ocultarError() {
+            mensajeError.classList.remove('mostrar');
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const respuesta = await fetch('http://localhost:3000/api/session', {
+                    credentials: 'include'
+                });
+                const datos = await respuesta.json();
+                
+                if (datos.authenticated) {
+                    if (datos.user.role === 'admin') {
+                        window.location.href = 'StorePhone.html?admin=true';
+                    } else {
+                        window.location.href = 'StorePhone.html?user=true';
+                    }
+                }
+            } catch (error) {
+            }
+        });
+    </script>
+</body>
+</html>
