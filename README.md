@@ -1,112 +1,121 @@
-# StorePhone - Proyecto Final
+# StorePhone — Proyecto Final de Programación Web
 
-Proyecto con catálogo de productos y sistema de gestión de usuarios. Incluye autenticación con roles y operaciones CRUD.
+Sitio web de una tienda de celulares con un formulario de contacto público y un panel de gestión de usuarios protegido por **autenticación con roles** (administrador / usuario). Incluye API REST propia con Node.js + Express y persistencia en SQLite.
+
+<p align="center">
+  <img src="docs/inicio.jpg" alt="Página de inicio de StorePhone" width="48%">
+  <img src="docs/login.jpg" alt="Pantalla de inicio de sesión" width="48%">
+</p>
+
+## Funcionalidades
+
+- Sitio público con secciones de inicio, ofertas, catálogo y contacto.
+- Formulario de contacto que registra usuarios (con validación en cliente y servidor).
+- Inicio de sesión con sesiones del lado del servidor y dos roles:
+  - **Administrador:** ve, edita y elimina usuarios (CRUD completo).
+  - **Usuario:** ve la lista de usuarios en modo solo lectura.
+- API REST con control de acceso por rol en cada endpoint.
 
 ## Tecnologías
 
-- Backend: Node.js, Express.js
-- Base de Datos: SQLite3
-- Frontend: TypeScript, HTML5, CSS3
-- Autenticación: express-session, bcrypt
+| Capa | Stack |
+|---|---|
+| Backend | Node.js, Express |
+| Base de datos | SQLite3 |
+| Frontend | TypeScript, HTML5, CSS3 |
+| Autenticación | express-session, bcrypt |
+| Seguridad | express-rate-limit, dotenv |
 
 ## Instalación
 
-### Requisitos
-
-- Node.js v14 o superior
-
-### Pasos
+**Requisitos:** Node.js 20.17 o superior.
 
 1. Instalar dependencias:
    ```bash
    npm install
    ```
 
-2. Inicializar base de datos:
+2. Crear el archivo de configuración a partir del ejemplo:
    ```bash
-   node backend/migrate.js
+   cp .env.example .env
    ```
-   Este comando crea las tablas y las cuentas de prueba:
-   - Administrador: `admin@gmail.com` / `admin123`
-   - Usuario: `usuario@gmail.com` / `usuario123`
+   Completar en `.env`:
+   - `SESSION_SECRET`: cadena aleatoria de al menos 32 caracteres. Para generarla:
+     ```bash
+     node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+     ```
+   - `SEED_ADMIN_PASSWORD` y `SEED_USER_PASSWORD`: contraseñas de las cuentas de prueba (elegí las tuyas).
 
-3. Iniciar servidor:
+3. Crear las tablas y las cuentas de prueba:
+   ```bash
+   npm run seed
+   ```
+   > ⚠️ El script **vacía** las tablas `usuarios` y `cuentas` antes de cargar los datos. Usalo solo para inicializar.
+
+4. Iniciar el servidor:
    ```bash
    npm start
    ```
 
-4. Acceder a la aplicación:
-   Abre http://localhost:3000/StorePhone.html en tu navegador.
+5. Abrir http://localhost:3000/StorePhone.html
 
-   Importante: Usa la URL de localhost. Abrir el archivo HTML directamente causará errores de CORS.
+> Es necesario entrar por `localhost:3000`. Abrir el HTML directamente desde el disco produce errores de CORS.
 
-## Sistema de Autenticación
+## API
 
-El proyecto incluye dos roles con diferentes permisos:
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| POST | `/api/login` | Público (limitado) | Inicia sesión |
+| POST | `/api/logout` | Sesión | Cierra sesión |
+| GET | `/api/session` | Público | Estado de la sesión actual |
+| GET | `/api/usuarios` | Usuario o admin | Lista usuarios |
+| POST | `/api/usuarios` | Público (limitado) | Registra un usuario (formulario de contacto) |
+| PUT | `/api/usuarios/:id` | Admin | Edita un usuario |
+| DELETE | `/api/usuarios/:id` | Admin | Elimina un usuario |
 
-### Administrador
+## Seguridad
 
-- Acceso al panel de administración
-- Ver todos los usuarios registrados
-- Editar información de usuarios
-- Eliminar usuarios
-- Operaciones CRUD completas
+Decisiones tomadas en el proyecto:
 
-### Usuario Normal
+- **Contraseñas con bcrypt** (hash con sal), nunca en texto plano.
+- **Sin secretos en el código:** el secreto de sesión y las contraseñas de prueba salen de variables de entorno (`.env` está en `.gitignore`). El servidor no arranca sin un `SESSION_SECRET` válido.
+- **Consultas SQL parametrizadas** en todos los accesos a la base (previene inyección SQL).
+- **Prevención de XSS:** los datos de usuario se escapan antes de mostrarse en el panel de administración.
+- **Fuerza bruta y spam:** límite de intentos por IP en el login (10 cada 15 minutos) y en el formulario público (20 por hora).
+- **Sesiones:** cookie `HttpOnly` y `SameSite=Lax` (`Secure` en producción) y regeneración del ID de sesión al iniciar sesión (evita *session fixation*).
+- **Validación en el servidor** de formato de email y longitud máxima de los campos, además del límite de tamaño del cuerpo de las peticiones.
+- **Dependencias auditadas:** `npm audit` sin vulnerabilidades conocidas.
 
-- Acceso al panel de usuario (solo lectura)
-- Ver lista de usuarios registrados
-- No puede editar ni eliminar usuarios
-
-### Iniciar Sesión
-
-1. Haz clic en el botón "Iniciar Sesión" o "Panel Administrador" en el footer
-2. Serás redirigido a la página de login
-3. Ingresa las credenciales correspondientes
-4. Una vez autenticado, podrás acceder al panel desde el botón en el footer
-
-## Estructura del Proyecto
+## Estructura del proyecto
 
 ```
-StorePhoneFinal/
 ├── backend/
-│   ├── db.js              # Configuración de SQLite3
-│   ├── datos.json         # Datos de ejemplo (vacío por defecto)
-│   ├── server.js          # Servidor Express con API REST
-│   ├── usuarios.db        # Base de datos SQLite
-│   └── migrate.js         # Script de inicialización
+│   ├── db.js          # Conexión y creación de tablas de SQLite
+│   ├── server.js      # Servidor Express y API REST
+│   ├── migrate.js     # Inicialización de datos y cuentas de prueba
+│   └── datos.json     # Datos de ejemplo (vacío por defecto)
 ├── frontend/
-│   └── main.ts            # Lógica TypeScript del frontend
-├── dist/
-│   └── main.js            # JavaScript compilado
-├── img/                   # Imágenes del proyecto
-├── StorePhone.html        # Página principal
-├── login.html             # Página de inicio de sesión
-├── StorePhone.css         # Estilos principales
-├── login.css              # Estilos del login
-├── package.json
-└── tsconfig.json
+│   └── main.ts        # Lógica del cliente en TypeScript
+├── docs/              # Capturas para este README
+├── img/               # Imágenes del sitio
+├── StorePhone.html    # Página principal
+├── login.html         # Inicio de sesión
+├── .env.example       # Plantilla de variables de entorno
+└── package.json
 ```
 
 ## Scripts
 
-- `npm install`: Instala las dependencias
-- `npm run build`: Compila TypeScript
-- `npm start`: Compila y inicia el servidor
+| Comando | Descripción |
+|---|---|
+| `npm install` | Instala las dependencias |
+| `npm run build` | Compila TypeScript a `dist/` |
+| `npm run seed` | Inicializa la base de datos y las cuentas de prueba |
+| `npm start` | Compila e inicia el servidor |
 
-## Solución de Problemas
+## Solución de problemas
 
-**Error al cargar usuarios en el panel**
-- Verifica que estés autenticado
-- Asegúrate de acceder a través de http://localhost:3000/StorePhone.html
-- No abras el archivo HTML directamente
-
-**Error de autenticación**
-- Ejecuta `node backend/migrate.js` para crear las cuentas de prueba
-- Verifica las credenciales correctas
-
-**Error: "address already in use"**
-- El puerto 3000 está ocupado. Detén el proceso anterior
-
-**Error: "Cannot find module"**
-- Ejecuta `npm install` para instalar las dependencias
+- **"Falta SESSION_SECRET":** creá el archivo `.env` (paso 2 de la instalación).
+- **Error al cargar usuarios en el panel:** verificá que hayas iniciado sesión y que entres por `http://localhost:3000/StorePhone.html`.
+- **"address already in use":** el puerto 3000 está ocupado; cerrá el proceso anterior o cambiá `PORT` en `.env`.
+- **"Demasiados intentos":** se activó el límite de login; esperá 15 minutos.
