@@ -3,17 +3,23 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "express": "^4.21.0",
-    "sqlite3": "^5.1.7",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
+    "dotenv": "^18.0.10",
+    "express": "^4.21.0",
+    "express-rate-limit": "^8.7.3",
     "express-session": "^1.18.0",
-    "bcrypt": "^5.1.1"
+    "sqlite3": "^6.0.1"
   },
   "devDependencies": {
     "typescript": "^5.4.5"
   },
   "scripts": {
     "start": "npm run build && node backend/server.js",
-    "build": "tsc"
+    "build": "tsc",
+    "seed": "node backend/migrate.js"
+  },
+  "engines": {
+    "node": ">=20.17.0"
   }
 }

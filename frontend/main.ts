@@ -226,6 +226,16 @@ async function cargarUsuarios() {
     }
 }
 
+// Escapa texto antes de insertarlo como HTML (evita XSS almacenado)
+function escapeHtml(valor: unknown): string {
+    return String(valor)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function mostrarUsuarios(usuarios: Usuario[], esAdmin: boolean = false) {
     if (usuarios.length === 0) {
         tablaUsuarios.innerHTML = '<p>No hay usuarios registrados</p>';
@@ -249,14 +259,14 @@ function mostrarUsuarios(usuarios: Usuario[], esAdmin: boolean = false) {
             <tbody>
                 ${usuarios.map(u => `
                     <tr>
-                        <td class="col-id">${u.id}</td>
-                        <td class="col-name">${u.name}</td>
-                        <td class="col-email">${u.email}</td>
+                        <td class="col-id">${Number(u.id)}</td>
+                        <td class="col-name">${escapeHtml(u.name)}</td>
+                        <td class="col-email">${escapeHtml(u.email)}</td>
                         <td class="col-created">${new Date(u.created_at.replace(' ', 'T') + 'Z').toLocaleString()}</td>
                         ${esAdmin ? `
                             <td class="col-actions">
-                                <button class="btn-editar" data-id="${u.id}">✏️ Editar</button>
-                                <button class="btn-eliminar" data-id="${u.id}">🗑️ Eliminar</button>
+                                <button class="btn-editar" data-id="${Number(u.id)}">✏️ Editar</button>
+                                <button class="btn-eliminar" data-id="${Number(u.id)}">🗑️ Eliminar</button>
                             </td>
                         ` : ''}
                     </tr>

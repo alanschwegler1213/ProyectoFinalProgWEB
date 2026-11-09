@@ -1,15 +1,29 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import session from "express-session";
+import rateLimit from "express-rate-limit";
 import bcrypt from "bcrypt";
-import db from "./db.js";
+import db, { ready } from "./db.js";
 import path from "path";
 import { fileURLToPath } from "url";
+
+const PORT = Number(process.env.PORT) || 3000;
+const IS_PROD = process.env.NODE_ENV === "production";
+const SESSION_SECRET = process.env.SESSION_SECRET;
+
+if (!SESSION_SECRET || SESSION_SECRET.length < 32) {
+  console.error(
+    "Falta SESSION_SECRET (mínimo 32 caracteres). Copiá .env.example a .env y generá uno con:\n" +
+    "  node -e \"console.log(require('crypto').randomBytes(48).toString('hex'))\""
+  );
+  process.exit(1);
+}
 
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: process.env.CORS_ORIGIN || `http://localhost:${PORT}`,
   credentials: true
 }));
 
@@ -20,18 +34,41 @@ const publicPath = path.join(__dirname, "..");
 app.use(express.static(publicPath));
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 
 app.use(session({
-  secret: 'storephone-secret-key-2025',
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
+    secure: IS_PROD,
     httpOnly: true,
+    sameSite: "lax",
     maxAge: 24 * 60 * 60 * 1000
   }
 }));
+
+// Limita intentos de login por IP (frena fuerza bruta)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiados intentos. Probá de nuevo en 15 minutos." }
+});
+
+// Limita altas desde el formulario público (frena spam)
+const registroLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Demasiadas solicitudes. Probá más tarde." }
+});
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_NAME = 100;
+const MAX_EMAIL = 254;
 
 function getAllUsuarios() {
   return new Promise((resolve, reject) => {
@@ -129,7 +166,7 @@ function requireAdmin(req, res, next) {
 
 app.get("/", (req, res) => res.send("🟢 API StorePhone: OK"));
 
-app.post("/api/login", async (req, res) => {
+app.post("/api/login", loginLimiter, async (req, res) => {
   const { username = "", password = "" } = req.body ?? {};
   
   if (!username || !password) {
@@ -149,19 +186,27 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Usuario o contraseña incorrectos" });
     }
 
-    req.session.user = {
-      id: cuenta.id,
-      username: cuenta.username,
-      role: cuenta.role
-    };
+    // Regenera el ID de sesión al autenticar (evita session fixation)
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error("Error regenerando sesión:", err);
+        return res.status(500).json({ error: "Error en el servidor" });
+      }
 
-    res.json({ 
-      ok: true, 
-      user: {
+      req.session.user = {
         id: cuenta.id,
         username: cuenta.username,
         role: cuenta.role
-      }
+      };
+
+      res.json({
+        ok: true,
+        user: {
+          id: cuenta.id,
+          username: cuenta.username,
+          role: cuenta.role
+        }
+      });
     });
   } catch (error) {
     console.error("Error en login:", error);
@@ -209,13 +254,17 @@ app.get("/api/usuarios", requireAuth, async (req, res) => {
   }
 });
 
-app.post("/api/usuarios", async (req, res) => {
+app.post("/api/usuarios", registroLimiter, async (req, res) => {
   const { name = "", email = "" } = req.body ?? {};
   const cleanName = String(name).trim();
   const cleanEmail = String(email).trim().toLowerCase();
 
   if (!cleanName || !cleanEmail) {
     return res.status(400).json({ error: "Nombre y email son requeridos" });
+  }
+
+  if (cleanName.length > MAX_NAME || cleanEmail.length > MAX_EMAIL || !EMAIL_REGEX.test(cleanEmail)) {
+    return res.status(400).json({ error: "Nombre o email inválido" });
   }
 
   try {
@@ -240,6 +289,10 @@ app.put("/api/usuarios/:id", requireAuth, requireAdmin, async (req, res) => {
 
   if (!cleanName || !cleanEmail) {
     return res.status(400).json({ error: "Nombre y email son requeridos" });
+  }
+
+  if (cleanName.length > MAX_NAME || cleanEmail.length > MAX_EMAIL || !EMAIL_REGEX.test(cleanEmail)) {
+    return res.status(400).json({ error: "Nombre o email inválido" });
   }
 
   try {
@@ -277,6 +330,8 @@ app.delete("/api/usuarios/:id", requireAuth, requireAdmin, async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("Servidor iniciado en http://localhost:3000");
+await ready;
+
+app.listen(PORT, () => {
+  console.log(`Servidor iniciado en http://localhost:${PORT}`);
 });

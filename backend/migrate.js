@@ -1,14 +1,26 @@
+import "dotenv/config";
 import { readFile } from "fs/promises";
 import bcrypt from "bcrypt";
-import db from "./db.js";
+import db, { ready } from "./db.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const { SEED_ADMIN_USER, SEED_ADMIN_PASSWORD, SEED_USER_USER, SEED_USER_PASSWORD } = process.env;
+
+if (!SEED_ADMIN_USER || !SEED_ADMIN_PASSWORD || !SEED_USER_USER || !SEED_USER_PASSWORD) {
+  console.error(
+    "Faltan credenciales de prueba. Definí SEED_ADMIN_USER, SEED_ADMIN_PASSWORD, " +
+    "SEED_USER_USER y SEED_USER_PASSWORD en tu archivo .env (ver .env.example)."
+  );
+  process.exit(1);
+}
+
 async function migrate() {
   try {
+    await ready;
     console.log("🔄 Iniciando migración de datos...");
     
     await new Promise((resolve, reject) => {
@@ -69,8 +81,8 @@ async function migrate() {
     console.log("\n🔐 Creando cuentas de ejemplo...");
     
     const cuentas = [
-      { username: 'admin@gmail.com', password: 'admin123', role: 'admin' },
-      { username: 'usuario@gmail.com', password: 'usuario123', role: 'usuario' }
+      { username: SEED_ADMIN_USER, password: SEED_ADMIN_PASSWORD, role: 'admin' },
+      { username: SEED_USER_USER, password: SEED_USER_PASSWORD, role: 'usuario' }
     ];
 
     let cuentasCreadas = 0;
@@ -87,7 +99,7 @@ async function migrate() {
                 reject(err);
               } else {
                 cuentasCreadas++;
-                console.log(`✅ Cuenta creada: ${cuenta.username} (${cuenta.role}) - Contraseña: ${cuenta.password}`);
+                console.log(`✅ Cuenta creada: ${cuenta.username} (${cuenta.role})`);
                 resolve();
               }
             }
